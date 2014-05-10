@@ -15,32 +15,51 @@ def dbg(msg):
 def argv_gen():
     global args
     parser = argparse.ArgumentParser(description='Extract JPG from the buka file')
-    parser.add_argument('-f', '--file', type=str, action="store", dest="flist", default="", help='extract jpg from the specific file')
+    parser.add_argument('-f', '--files', type=str, nargs='+', action="store", dest="files", default=None, help='extract jpg from the specific file')
     parser.add_argument('-v', '--version', action='version', version='buka2jpg %d.%d.%d' % (VERSION, PATCHLEVEL, SUBLEVEL))
     args = parser.parse_args()
 
 if __name__ == "__main__" :
     dbg_target = ['<module>']
-    DEBUG = 1
+    DEBUG = 0
     if DEBUG == 1 :
         logging.basicConfig(level=logging.DEBUG)
     else :
         logging.basicConfig(level=logging.ERROR)
     log = logging.getLogger(__name__)
     argv_gen()
-
+    
     infofile = "chaporder.dat"
+    vols = []
     if os.path.isfile(infofile) :
         finfo = json.loads(open(infofile, "r").read())
         comicname = finfo["name"]
-        vols = sorted(finfo["links"], key=lambda x:x["idx"])
+        if args.files == None :
+            vols = sorted(finfo["links"], key=lambda x:x["idx"])
+        else :
+            for i in args.files :
+                if not os.path.isfile(i) :
+                    print i + " does not exist"
+                    continue
+                if i[:2] == "./" :
+                    i = i[2:]
+                for each in finfo["links"] :
+                    if str(each["cid"]) == i[:-5] : # the cid exist in chaporder.dat
+                        vols.append({"idx":each["idx"], "cid":each["cid"]})
+                        break
+                if vols == [] or str(vols[-1]["cid"]) != i[:-5] : # cid does not exist
+                    vols.append({"idx":i[:-5], "cid":i[:-5]})
     else : # chaporder.dat does not exist
         comicname = "comic"
-        vols = []
-        for i in  sorted(glob.glob("*.buka")) :
-            vols.append({"idx":i[:-5], "cid":i[:-5]})
-    if not os.path.exists(comicname) :
-        os.makedirs(comicname)
+        if args.files == None :
+            for i in sorted(glob.glob("*.buka")) :
+                vols.append({"idx":i[:-5], "cid":i[:-5]})
+        else :
+            for i in args.files :
+                vols.append({"idx":i[:-5], "cid":i[:-5]})
+
+    if vols == [] :
+        sys.exit("there is no target to extract!")
     for each in vols :
         idx = str(each["idx"])
         dbg("vol "+ idx)
@@ -48,6 +67,8 @@ if __name__ == "__main__" :
         if not os.path.isfile(cid) :
             print cid + " does not exist"
             continue
+        if not os.path.exists(comicname) :
+            os.makedirs(comicname)
         path = "./" + comicname + "/" + idx
         if not os.path.exists(path) :
             os.makedirs(path)
