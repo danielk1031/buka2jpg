@@ -2,6 +2,12 @@ buka2jpg
 ========
 This project aims to extract jpg from the downloaded buka file and view them on PC. buka2jpg is beta software and may change as buka format changed.
 
+## System Requirements
+Currently, this is a command-line program. You could use this on systems with python 2.x.
+
+Linux
+Mac OS X
+
 ##Current Status
 Extract all files and create the corresponding folders based on chaporder.dat. If chaporder.dat does not exist, will extract all the .buka under the same directory. 
 
@@ -10,7 +16,7 @@ buka2jpg [OPTIONS]
 
 ##OPTIONS
     -f, --file
-        extract jpg from the specific file
+        Extract jpg from the specific file
     -h
         Print a usage message briefly summarizing these command-line options and the bug-reporting address, then exit.
     -v, --version
