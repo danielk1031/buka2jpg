@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging, inspect, json, argparse
+import logging, inspect, json, argparse, glob
 import os, sys
 
 VERSION = 0
@@ -21,7 +21,7 @@ def argv_gen():
 
 if __name__ == "__main__" :
     dbg_target = ['<module>']
-    DEBUG = 0
+    DEBUG = 1
     if DEBUG == 1 :
         logging.basicConfig(level=logging.DEBUG)
     else :
@@ -30,20 +30,25 @@ if __name__ == "__main__" :
     argv_gen()
 
     infofile = "chaporder.dat"
-    if not os.path.isfile(infofile) :
-        sys.exit("The chaporder.dat does not exist!")
-    finfo = json.loads(open(infofile, "r").read())
-    if not os.path.exists(finfo["name"]) :
-        os.makedirs(finfo["name"])
-    vols = sorted(finfo["links"], key=lambda x:x["idx"])
+    if os.path.isfile(infofile) :
+        finfo = json.loads(open(infofile, "r").read())
+        comicname = finfo["name"]
+        vols = sorted(finfo["links"], key=lambda x:x["idx"])
+    else : # chaporder.dat does not exist
+        comicname = "comic"
+        vols = []
+        for i in  sorted(glob.glob("*.buka")) :
+            vols.append({"idx":i[:-5], "cid":i[:-5]})
+    if not os.path.exists(comicname) :
+        os.makedirs(comicname)
     for each in vols :
         idx = str(each["idx"])
         dbg("vol "+ idx)
         cid = str(each["cid"])+".buka"
         if not os.path.isfile(cid) :
-            print cid + " failed"
+            print cid + " does not exist"
             continue
-        path = "./" + finfo["name"] + "/" + idx
+        path = "./" + comicname + "/" + idx
         if not os.path.exists(path) :
             os.makedirs(path)
         flag = 0
